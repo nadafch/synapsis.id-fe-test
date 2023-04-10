@@ -2,7 +2,16 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-First, run the development server:
+First, clone the project
+https://github.com/nadafch/synapsis.id-fe-test.git
+
+Go to directory
+cd synapsis.id-fe-test
+
+Install Dependencies
+npm install / yarn
+
+run the development server:
 
 ```bash
 npm run dev
