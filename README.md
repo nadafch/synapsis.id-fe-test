@@ -3,13 +3,13 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 ## Getting Started
 
 First, clone the project
-https://github.com/nadafch/synapsis.id-fe-test.git
+https://github.com/nadafch/web-blog.git
 
 Go to directory
-cd synapsis.id-fe-test
+cd web-blog
 
 Install Dependencies
-npm install / yarn
+npm install / yarn add
 
 run the development server:
 

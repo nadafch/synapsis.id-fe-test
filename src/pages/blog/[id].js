@@ -45,8 +45,6 @@ export default function BlogDetail() {
     }
   }, [detailBlog, id]);
 
-  console.log(comment);
-
   return detailBlog ? (
     <div className="w-full min-h-screen bg-slate-100 p-5 flex justify-center">
       <div className="w-full h-fit max-w-[80%] bg-white p-5 rounded-lg">
