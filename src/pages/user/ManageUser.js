@@ -2,16 +2,22 @@ import ModalAddUser from "@/components/ModalAddUser";
 import ModalEditUser from "@/components/ModalEditUser";
 import SearchBar from "@/components/SearchBar";
 import UserCard from "@/components/UserCard";
-import { Dialog } from "@headlessui/react";
-import axios from "axios";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  createUser,
+  deleteUser,
+  getUser,
+  updateUser,
+} from "../../../store/api";
 
 export default function ManageUser() {
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenEdit, setIsOpenEdit] = useState(false);
   const [fetchUser, setFetchUser] = useState([]);
+  const [search, setSearch] = useState("");
   const [field, setField] = useState({
     email: "",
     name: "",
@@ -20,115 +26,75 @@ export default function ManageUser() {
   });
   const [editID, setEditID] = useState("");
   const [editField, setEditField] = useState({
+    id: null,
     email: "",
     name: "",
     gender: "female",
     status: "active",
   });
-  const [search, setSearch] = useState("");
 
-  const api = axios.create({
-    baseURL: "https://gorest.co.in/public/v2",
-    headers: {
-      Authorization: `Bearer 22f82cecb8faa17d1060d4f16d5dbbaaa1e13d21076fbea9c7cf32b65db70db2`,
-    },
-  });
+  const { user, isLoading } = useSelector((state) => state.user);
 
   useEffect(() => {
-    getUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    dispatch(getUser());
+  }, [dispatch]);
 
-  const getUser = () => {
-    try {
-      const getData = async () => {
-        const res = await api.get("/users");
-        const result = res.data;
-        setFetchUser(result);
-      };
-      getData();
-    } catch (e) {
-      console.log(e.message);
-    }
-  };
-
-  const handleSubmit = useCallback(
-    (e) => {
-      e.preventDefault();
-      try {
-        const getData = async () => {
-          const res = await api.post("/users", field);
-          if (res.status === 201) {
-            alert("Data berhasil ditambahkan");
-          }
-          getUser();
-        };
-        getData();
-        setIsOpen(false);
-        setField({
-          email: "",
-          name: "",
-          gender: "female",
-          status: "active",
-        });
-      } catch (e) {
-        alert(e.message);
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [field]
-  );
-
-  const handleEdit = useCallback(
-    (e) => {
-      e.preventDefault();
-      try {
-        console.log(editField.id);
-        const getData = async () => {
-          const res = await api.patch(`/users/${editID}`, editField);
-          if (res.status === 200) {
-            alert("Data berhasil diubah");
-          }
-          getUser();
-        };
-        getData();
-        setIsOpenEdit(false);
-      } catch (e) {
-        alert(e.message);
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [editField, editID]
-  );
-
-  const handleDelete = useCallback((id) => {
-    try {
-      const getData = async () => {
-        await api.delete(`/users/${id}`);
-        alert(`data ${id} berhasil dihapus`);
-        getUser();
-      };
-      getData();
-      setIsOpen(false);
-    } catch (e) {
-      alert(e.message);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => {
+    setFetchUser(user);
+  }, [user]);
 
   useEffect(() => {
     if (search === "") {
-      getUser();
+      setFetchUser(user);
     } else {
       const filtered = fetchUser.filter((user) => {
         return user.name.toLowerCase().includes(search.toLowerCase());
       });
       setFetchUser(filtered);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
-  const RenderMain = useMemo(
-    () => (
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      dispatch(createUser(field));
+      setIsOpen(false);
+      setField({
+        email: "",
+        name: "",
+        gender: "female",
+        status: "active",
+      });
+    },
+    [dispatch, field]
+  );
+  const handleEdit = useCallback(
+    (e) => {
+      e.preventDefault();
+      dispatch(updateUser(editField));
+      dispatch(getUser());
+      setIsOpenEdit(false);
+    },
+    [dispatch, editField]
+  );
+
+  const handleDelete = useCallback((id) => {
+    try {
+      const deleteData = () => {
+        dispatch(deleteUser(id));
+        alert("data berhasil dihapus");
+        dispatch(getUser());
+      };
+      deleteData();
+    } catch (e) {
+      alert(e.message);
+    }
+  }, []);
+
+  console.log(fetchUser);
+  const RenderMain = useMemo(() => {
+    return (
       <div className="w-full min-h-screen bg-slate-200 p-3 flex flex-col items-center">
         <div className="w-full max-w-[500px] mt-5 mb-4">
           <SearchBar
@@ -147,45 +113,54 @@ export default function ManageUser() {
           Add User
         </button>
         <div className="w-[80%] p-5 flex flex-wrap justify-center gap-5">
-          {fetchUser.map((index, label) => (
-            <div key={label} className="w-[300px] p-3 mt-5 bg-white rounded-lg">
-              <div className="w-full">
-                <UserCard disabled user={index.name} email={index.email} />
-              </div>
-              <div className="flex justify-between items-center mt-3">
-                <div className="flex gap-3">
-                  <div
-                    role="button"
-                    onClick={() => {
-                      setEditField({
-                        name: index.name,
-                        email: index.email,
-                        gender: index.gender,
-                        status: index.status,
-                      });
-                      setEditID(index.id);
-                      setIsOpenEdit(!isOpenEdit);
-                    }}
-                  >
-                    <FaEdit />
-                  </div>
-
-                  <div role="button" onClick={() => handleDelete(index.id)}>
-                    <FaTrash />
-                  </div>
-                </div>
+          {!isLoading ? (
+            fetchUser.map((index) => {
+              return (
                 <div
-                  className={`py-1 px-3  text-xs font-bold rounded-full ${
-                    index.status === "inactive"
-                      ? "bg-red-500 text-white"
-                      : "bg-sky-300 text-sky-800"
-                  }`}
+                  key={index.name}
+                  className="w-[300px] p-3 mt-5 bg-white rounded-lg flex flex-col gap-5"
                 >
-                  {index.status}
+                  <div className="w-full">
+                    <UserCard disabled user={index.name} email={index.email} />
+                  </div>
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="flex gap-3">
+                      <div
+                        role="button"
+                        onClick={() => {
+                          setEditField({
+                            id: index.id,
+                            name: index.name,
+                            email: index.email,
+                            gender: index.gender,
+                            status: index.status,
+                          });
+                          setIsOpenEdit(!isOpenEdit);
+                        }}
+                      >
+                        <FaEdit />
+                      </div>
+
+                      <div role="button" onClick={() => handleDelete(index.id)}>
+                        <FaTrash />
+                      </div>
+                    </div>
+                    <div
+                      className={`py-1 px-3  text-xs font-bold rounded-full ${
+                        index.status === "inactive"
+                          ? "bg-red-500 text-white"
+                          : "bg-sky-300 text-sky-800"
+                      }`}
+                    >
+                      {index.status}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              );
+            })
+          ) : (
+            <div>Loading</div>
+          )}
         </div>
         <ModalAddUser
           isOpen={isOpen}
@@ -236,19 +211,19 @@ export default function ManageUser() {
           handleEdit={handleEdit}
         />
       </div>
-    ),
-    [
-      editField,
-      fetchUser,
-      field,
-      handleDelete,
-      handleEdit,
-      handleSubmit,
-      isOpen,
-      isOpenEdit,
-      search,
-    ]
-  );
+    );
+  }, [
+    editField,
+    fetchUser,
+    field,
+    handleDelete,
+    handleEdit,
+    handleSubmit,
+    isLoading,
+    isOpen,
+    isOpenEdit,
+    search,
+  ]);
 
   return RenderMain;
 }

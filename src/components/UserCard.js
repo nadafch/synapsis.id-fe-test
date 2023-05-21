@@ -3,15 +3,15 @@ import { FaUser } from "react-icons/fa";
 
 export default function UserCard(props) {
   return (
-    <>
-      <div className="w-full flex justify-between items-center p-3 bg-white rounded-xl">
-        <div className="w-full p-3 flex gap-2">
+    <div className="w-full flex flex-col gap-4">
+      <div className="flex items-center p-3 bg-white rounded-xl justify-around">
+        <div className="w-full max-w-[80%] flex items-center gap-5">
           <div className="w-fit h-fit rounded-full p-3 flex items-center justify-center bg-secondary text-white text-lg">
             <FaUser />
           </div>
-          <div className="w-full">
+          <div className="w-2/3">
             <div className="font-semibold">{props?.user}</div>
-            <div className="w-[50%] text-xs font-light">{props?.email}</div>
+            <div className="text-xs font-light break-words">{props?.email}</div>
           </div>
         </div>
         {!props?.disabled && (
@@ -25,6 +25,6 @@ export default function UserCard(props) {
           {props?.comment}
         </div>
       )}
-    </>
+    </div>
   );
 }

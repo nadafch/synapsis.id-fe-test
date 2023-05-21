@@ -5,57 +5,45 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import loader from "../../../public/loader.svg";
 import Image from "next/image";
+import { useDispatch, useSelector } from "react-redux";
+import { getArticle, getUser } from "../../../store/api";
 
 export default function ArticlesList() {
   const [fetchData, setFetchData] = useState([]);
   const [fetchUser, setFetchUser] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    getData();
-  }, []);
+  const dispatch = useDispatch();
+  const { data, isLoading, isError } = useSelector((state) => state.blog);
+  const { user } = useSelector((state) => state.user);
 
-  const getData = () => {
-    try {
-      const getData = async () => {
-        const res = await axios.get("https://gorest.co.in/public/v2/posts");
-        setFetchData(res.data);
-        setLoading(true);
-      };
-      getData();
-    } catch (e) {
-      console.log(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    dispatch(getArticle());
+  }, [dispatch]);
+
+  useEffect(() => {
+    setFetchData(data);
+  }, [data]);
+
+  useEffect(() => {
+    dispatch(getUser());
+  }, [dispatch]);
+
+  useEffect(() => {
+    setFetchUser(user);
+  }, [user]);
 
   useEffect(() => {
     if (search === "") {
-      getData();
+      setFetchData(data);
     } else {
       const filtered = fetchData.filter((data) => {
         return data.title.toLowerCase().includes(search.toLowerCase());
       });
       setFetchData(filtered);
     }
-  }, [search]);
-
-  useEffect(() => {
-    try {
-      const getData = async () => {
-        const res = await axios.get("https://gorest.co.in/public/v2/users");
-        setFetchUser(res.data);
-        setLoading(true);
-      };
-      getData();
-    } catch (e) {
-      console.log(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, search]);
 
   return (
     <div className="w-full">
@@ -88,20 +76,21 @@ export default function ArticlesList() {
         </div>
         <div className="mt-5 text-lg font-semibold">ARTICLES</div>
       </div>
-      {loading ? (
+      {!isLoading ? (
         <div className="w-full flex flex-col gap-5 p-8">
-          {fetchData.map((index, label) => (
-            <div key={label}>
-              <Link href={`/blog/${index.id}`}>
-                <ArticleCard
-                  user_id={index.user_id}
-                  title={index.title}
-                  body={index.body}
-                  users={fetchUser}
-                />
-              </Link>
-            </div>
-          ))}
+          {fetchData &&
+            fetchData.map((index, label) => (
+              <div key={label}>
+                <Link href={`/blog/${index.id}`}>
+                  <ArticleCard
+                    user_id={index.user_id}
+                    title={index.title}
+                    body={index.body}
+                    users={fetchUser}
+                  />
+                </Link>
+              </div>
+            ))}
         </div>
       ) : (
         <div className="flex items-center justify-center">
